@@ -14,6 +14,10 @@ class Sensor {
     }
     ~Sensor(){}
 
+    int getLapsus(){
+      return this->lapsus;
+    }
+
     void setLapsus(const int& lapsus){
       this->lapsus = lapsus;
     }
