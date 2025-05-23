@@ -22,6 +22,10 @@ class Sensor {
       this->lapsus = lapsus;
     }
 
+    int getThreshold(){
+      return this->threshold;
+    }
+
     void setThreshold(const int& threshold){
       this->threshold = threshold;
     }

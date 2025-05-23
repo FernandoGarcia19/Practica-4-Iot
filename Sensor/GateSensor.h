@@ -8,7 +8,7 @@ class GateSensor: public Sensor {
     unsigned long endMillis;
     String currentState;
   public:
-    GateSensor(const byte& pin, const int& threshold, const int& lapsus)
+    GateSensor(const byte& pin, const int& lapsus, const int& threshold)
     : Sensor(pin, threshold, lapsus), currentState("CLEAR"){
     }
     ~GateSensor(){}
@@ -23,14 +23,16 @@ class GateSensor: public Sensor {
         isBlocked = false;
         int blockedTime = (endMillis - startMillis) / 1000;
         if (blockedTime >= lapsus){
-          currentCommand = "OPEN";
+          currentState = "CLEAR";
         }
       } else {
-        currentCommand = "CLOSE";
+        currentState = "BLOCKED";
       }
-
     }
 
+    String getCurrentState(){
+      return this->currentState;
+    }
 };
 
 #endif

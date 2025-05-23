@@ -6,6 +6,9 @@
 #include "./Sensor/SmartCounter.h"
 #include "./Actuator/Actuator.h"
 
+#define DEF_THRESHOLD 2000
+#define DEF_LAPSUS 1
+
 class SmartParking {
   private:
     WifiManager wifiManager;
@@ -13,6 +16,9 @@ class SmartParking {
     Actuator actuator;
     GateSensor gateSensor;
     SmartCounter counterSensor;
+
+    String currentState;
+    int currentCarCount;
 
     const char* updateTopic;
     const char* deltaTopic;
@@ -24,10 +30,39 @@ class SmartParking {
     void reportState()
     {
       outputDoc["state"]["reported"]["gate_actuator"]["gate_state"] = actuator.getState();
-      outputDoc["state"]["reported"]["gate_sensor"]["sensor_state"] = gateSensor.getSensorState();
-      outputDoc["state"]["reported"]["counter_sensor"]["sensor_state"] = counterSensor.getSensorState();
-      outputDoc["state"]["reported"]["config"]["threshold"] = sensor.getThreshold();
-      outputDoc["state"]["reported"]["config"]["lapsus"] = sensor.getLapsus();
+      outputDoc["state"]["reported"]["gate_sensor"]["sensor_state"] = gateSensor.getCurrentState();
+      outputDoc["state"]["reported"]["car_count"] = counterSensor.getCarCounter();
+      outputDoc["state"]["reported"]["config"]["threshold"] = gateSensor.getThreshold();
+      outputDoc["state"]["reported"]["config"]["lapsus"] = gateSensor.getLapsus();
+      size_t len = serializeJson(outputDoc, outputBuffer, sizeof(outputBuffer));
+      outputBuffer[len] = '\0'; 
+      mqttClient.publish(updateTopic, outputBuffer);
+    }
+
+    void reportGateState(){
+      outputDoc["state"]["reported"]["gate_actuator"]["gate_state"] = actuator.getState();
+      size_t len = serializeJson(outputDoc, outputBuffer, sizeof(outputBuffer));
+      outputBuffer[len] = '\0'; 
+      mqttClient.publish(updateTopic, outputBuffer);
+    }
+
+    void reportConfig(){
+      outputDoc["state"]["reported"]["config"]["threshold"] = gateSensor.getThreshold();
+      outputDoc["state"]["reported"]["config"]["lapsus"] = gateSensor.getLapsus();
+      size_t len = serializeJson(outputDoc, outputBuffer, sizeof(outputBuffer));
+      outputBuffer[len] = '\0'; 
+      mqttClient.publish(updateTopic, outputBuffer);
+    }
+
+    void reportSensorBlocked(){
+      outputDoc["state"]["reported"]["gate_sensor"]["sensor_state"] = gateSensor.getCurrentState();
+      size_t len = serializeJson(outputDoc, outputBuffer, sizeof(outputBuffer));
+      outputBuffer[len] = '\0'; 
+      mqttClient.publish(updateTopic, outputBuffer);
+    }
+
+    void reportCar(){
+      outputDoc["state"]["reported"]["car_count"] = counterSensor.getCarCounter();
       size_t len = serializeJson(outputDoc, outputBuffer, sizeof(outputBuffer));
       outputBuffer[len] = '\0'; 
       mqttClient.publish(updateTopic, outputBuffer);
@@ -46,27 +81,29 @@ class SmartParking {
       gateSensor.setLapsus(lapsus);
       counterSensor.setLapsus(lapsus);
     }
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
+
     void handleDelta(JsonVariant state) {
-      if (state.containsKey("servomotor")) {
-        String gateState = state["servomotor"]["gate_state"].as<String>();
+      if (state.containsKey("gate_actuator")) {
+        String gateState = state["gate_actuator"]["gate_state"].as<String>();
         manageServoGate(gateState);
+        reportGateState();
       }
       if (state.containsKey("config")) {
-        int threshold = state["lightsensor"]["config"]["threshold"] | 0;
+        int threshold = state["config"]["threshold"] | 0;
+        int lapsus = state["config"]["lapsus"] | 0;
         setSensorThreshold(threshold);
+        setSensorLapsus(lapsus);
+        reportConfig();
       }
-      reportState();
     }
 
   public:
     SmartParking(const char* SSID, const char* password, const char* clientId, const char* broker,const int &port, 
-      const byte& actuatorPin, const byte& sensorPin, const char* updateTopic, const char* deltaTopic)
+      const byte& actuatorPin, const byte& gateSensorPin, const byte& counterSensorPin, const char* updateTopic, const char* deltaTopic)
       : wifiManager(SSID, password),
         mqttClient(broker, port, clientId),
-        actuator(actuatorPin), sensor(sensorPin),
-        updateTopic(updateTopic), deltaTopic(deltaTopic)
+        actuator(actuatorPin), gateSensor(gateSensorPin, DEF_LAPSUS, DEF_THRESHOLD), counterSensor(counterSensorPin, DEF_LAPSUS, DEF_THRESHOLD),
+        updateTopic(updateTopic), deltaTopic(deltaTopic), currentState("CLEAR"), currentCarCount(0)
     {
     }
 
@@ -74,9 +111,6 @@ class SmartParking {
     void init(){
       wifiManager.connect();
       actuator.init();
-      sensor.readLightValue();
-      sensor.setSensorState(sensor.classifyState(sensor.getLightValue()));
-
 
       mqttClient.setCallback([this](char *topic, byte *payload, unsigned int length) {
         String message;
@@ -105,16 +139,20 @@ class SmartParking {
         mqttClient.subscribe(deltaTopic);
         reportState();
       }
+
       mqttClient.loop();
+      gateSensor.loop();
+      counterSensor.loop();
 
-      sensor.readLightValue();
+      if(currentState != gateSensor.getCurrentState()){
+        currentState = gateSensor.getCurrentState();
+        reportSensorBlocked();
+      }
 
-      String newState = sensor.classifyState(sensor.getLightValue());
-      if (sensor.stateHasChanged(newState)) {
-        sensor.setSensorState(newState);
-        reportState();
-      } 
-      delay(1000);
+      if(currentCarCount != counterSensor.getCarCounter()){
+        currentCarCount = counterSensor.getCarCounter();
+        reportCar();
+      }
     }
 };
 #endif
