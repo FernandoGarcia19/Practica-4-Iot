@@ -5,17 +5,17 @@
 
 class SmartCounter: public Sensor{
   private:
-    int counter; 
+    int carCounter; 
     unsigned long startLapsus; 
     unsigned long endLapsus; 
   public:
     SmartCounter(const byte& pin, const int& lapsus, const int& threshold)
-    : Sensor(pin, lapsus, threshold), counter(0), startLapsus(0), endLapsus(0){
+    : Sensor(pin, lapsus, threshold), carCounter(0), startLapsus(0), endLapsus(0){
     }
     ~SmartCounter(){}
 
-    int getCounter(){
-      return counter;
+    int getCarCounter(){
+      return carCounter;
     }
     
     void loop(){
@@ -28,7 +28,7 @@ class SmartCounter: public Sensor{
         isBlocked = false;
         int blockedTime = (endLapsus - startLapsus) / 1000;
         if (blockedTime >= lapsus){
-          counter++;
+          carCounter++;
         }
       }
       delay(SMART_COUNTER_DELAY);
