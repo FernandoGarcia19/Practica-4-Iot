@@ -82,18 +82,43 @@ class SmartParking {
       counterSensor.setLapsus(lapsus);
     }
 
+    void setCarCount(int carCount){
+      counterSensor.setCarCounter(carCount);
+    }
+
     void handleDelta(JsonVariant state) {
       if (state.containsKey("gate_actuator")) {
         String gateState = state["gate_actuator"]["gate_state"].as<String>();
         manageServoGate(gateState);
         reportGateState();
       }
+
+      if (state.containsKey("car_count")) {
+        int carCount = state["car_count"].as<int>();
+        setCarCount(carCount);
+        reportCar();
+      }
+
+      bool configChanged = false;
+
       if (state.containsKey("config")) {
-        int threshold = state["config"]["threshold"] | 0;
-        int lapsus = state["config"]["lapsus"] | 0;
-        setSensorThreshold(threshold);
-        setSensorLapsus(lapsus);
-        reportConfig();
+        JsonVariant config = state["config"];
+
+        if (config.containsKey("threshold")) {
+          int threshold = config["threshold"];
+          setSensorThreshold(threshold);
+          configChanged = true;
+        }
+
+        if (config.containsKey("lapsus")) {
+          int lapsus = config["lapsus"];
+          setSensorLapsus(lapsus);
+          configChanged = true;
+        }
+
+        if (configChanged) {
+          reportConfig();
+        }
       }
     }
 
@@ -111,6 +136,8 @@ class SmartParking {
     void init(){
       wifiManager.connect();
       actuator.init();
+      gateSensor.init();
+      counterSensor.init();
 
       mqttClient.setCallback([this](char *topic, byte *payload, unsigned int length) {
         String message;
@@ -143,9 +170,11 @@ class SmartParking {
       mqttClient.loop();
       gateSensor.loop();
       counterSensor.loop();
+      actuator.loop();
 
       if(currentState != gateSensor.getCurrentState()){
         currentState = gateSensor.getCurrentState();
+        reportGateState();
         reportSensorBlocked();
       }
 
@@ -153,6 +182,7 @@ class SmartParking {
         currentCarCount = counterSensor.getCarCounter();
         reportCar();
       }
+      delay(1000);
     }
 };
 #endif

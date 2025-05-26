@@ -34,5 +34,9 @@ class SmartCounter: public Sensor{
       delay(SMART_COUNTER_DELAY);
     }
 
+    void setCarCounter(int carCount){
+      this->carCounter = carCount;
+    }
+
 };
 #endif

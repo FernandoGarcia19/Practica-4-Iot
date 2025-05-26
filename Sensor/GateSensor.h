@@ -2,36 +2,40 @@
 #define GATESENSOR_H
 #define GATE_SENSOR_DELAY 5
 #include "Sensor.h"
-class GateSensor: public Sensor {
+class GateSensor : public Sensor {
   private:
-    unsigned long startMillis;
-    unsigned long endMillis;
+    unsigned long startMillis = 0;
+    bool timingBlock = false;
+    bool hasTriggered = false;
     String currentState;
+
   public:
     GateSensor(const byte& pin, const int& lapsus, const int& threshold)
-    : Sensor(pin, threshold, lapsus), currentState("CLEAR"){
-    }
-    ~GateSensor(){}
-    
-    void loop(){
+      : Sensor(pin, threshold, lapsus), currentState("CLEAR") {}
+
+    ~GateSensor() {}
+
+    void loop() {
       readLightValue();
-      if(lightValue <= threshold && !isBlocked){
-        startMillis = millis();
-        isBlocked = true;
-      } else if (lightValue > threshold && isBlocked){
-        endMillis = millis();
-        isBlocked = false;
-        int blockedTime = (endMillis - startMillis) / 1000;
-        if (blockedTime >= lapsus){
-          currentState = "CLEAR";
+
+      if (lightValue <= threshold) {
+        if (!timingBlock) {
+          startMillis = millis();
+          timingBlock = true;
+        } else if (!hasTriggered && (millis() - startMillis >= (unsigned long)(lapsus * 1000))) {
+          currentState = "BLOCKED";
+          hasTriggered = true;
         }
       } else {
-        currentState = "BLOCKED";
+        // Reset when light is restored
+        timingBlock = false;
+        hasTriggered = false;
+        currentState = "CLEAR";
       }
     }
 
-    String getCurrentState(){
-      return this->currentState;
+    String getCurrentState() {
+      return currentState;
     }
 };
 

@@ -47,6 +47,7 @@ public:
     if (state == "OPEN" && isOpenTimerRunning) {
       if (millis() - openStartTime >= OPEN_TIME) {
         closeGate();
+        
       }
     }
   }

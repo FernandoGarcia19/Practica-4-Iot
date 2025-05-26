@@ -1,12 +1,14 @@
-#include "Sensor/SmartCounter.h"
-#include "Sensor/GateSensor.h"
-SmartCounter smartcounter(25, 5, 2000);
-GateSensor gatesensor(34, 5, 2000);
+#include "SmartParking.h"
+#include "config.h"
+
+SmartParking* parking;
 
 void setup(){
-
+  Serial.begin(115200);
+  parking = new SmartParking(SSID, password, clientId, broker, port, actuatorPin, gateSensorPin, counterSensorPin, updateTopic, deltaTopic);
+  parking->init();
 }
 
 void loop(){
-
+  parking->loop();
 }
