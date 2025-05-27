@@ -10,14 +10,13 @@ class GateSensor : public Sensor {
     String currentState;
 
   public:
-    GateSensor(const byte& pin, const int& lapsus, const int& threshold)
+    GateSensor(const byte& pin, const int& threshold, const int& lapsus)
       : Sensor(pin, threshold, lapsus), currentState("CLEAR") {}
 
     ~GateSensor() {}
 
     void loop() {
       readLightValue();
-
       if (lightValue <= threshold) {
         if (!timingBlock) {
           startMillis = millis();

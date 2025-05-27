@@ -9,8 +9,8 @@ class SmartCounter: public Sensor{
     unsigned long startLapsus; 
     unsigned long endLapsus; 
   public:
-    SmartCounter(const byte& pin, const int& lapsus, const int& threshold)
-    : Sensor(pin, lapsus, threshold), carCounter(0), startLapsus(0), endLapsus(0){
+    SmartCounter(const byte& pin, const int& threshold, const int& lapsus)
+    : Sensor(pin, threshold, lapsus), carCounter(0), startLapsus(0), endLapsus(0){
     }
     ~SmartCounter(){}
 
@@ -31,7 +31,7 @@ class SmartCounter: public Sensor{
           carCounter++;
         }
       }
-      delay(SMART_COUNTER_DELAY);
+      //delay(SMART_COUNTER_DELAY);
     }
 
     void setCarCounter(int carCount){

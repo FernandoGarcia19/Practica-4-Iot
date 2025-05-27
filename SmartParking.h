@@ -127,7 +127,7 @@ class SmartParking {
       const byte& actuatorPin, const byte& gateSensorPin, const byte& counterSensorPin, const char* updateTopic, const char* deltaTopic)
       : wifiManager(SSID, password),
         mqttClient(broker, port, clientId),
-        actuator(actuatorPin), gateSensor(gateSensorPin, DEF_LAPSUS, DEF_THRESHOLD), counterSensor(counterSensorPin, DEF_LAPSUS, DEF_THRESHOLD),
+        actuator(actuatorPin), gateSensor(gateSensorPin, DEF_THRESHOLD, DEF_LAPSUS), counterSensor(counterSensorPin, DEF_THRESHOLD, DEF_LAPSUS),
         updateTopic(updateTopic), deltaTopic(deltaTopic), currentState("CLEAR"), currentCarCount(0)
     {
     }
@@ -177,7 +177,6 @@ class SmartParking {
         reportGateState();
         reportSensorBlocked();
       }
-
       if(currentCarCount != counterSensor.getCarCounter()){
         currentCarCount = counterSensor.getCarCounter();
         reportCar();
