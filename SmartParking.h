@@ -170,7 +170,7 @@ class SmartParking {
       mqttClient.loop();
       gateSensor.loop();
       counterSensor.loop();
-      actuator.loop();
+      //actuator.loop();
 
       if(currentState != gateSensor.getCurrentState()){
         currentState = gateSensor.getCurrentState();
