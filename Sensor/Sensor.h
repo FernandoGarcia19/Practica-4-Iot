@@ -14,12 +14,20 @@ class Sensor {
     }
     ~Sensor(){}
 
+    int getLightValue(){
+      return this->lightValue;
+    }
+
     int getLapsus(){
       return this->lapsus;
     }
 
     void setLapsus(const int& lapsus){
       this->lapsus = lapsus;
+    }
+
+    int getThreshold(){
+      return this->threshold;
     }
 
     void setThreshold(const int& threshold){
