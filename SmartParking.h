@@ -158,6 +158,7 @@ class SmartParking {
         JsonVariant deltaState = inputDoc["state"];
         this->handleDelta(deltaState);  // your custom processor
       });
+      
     }
 
     void loop(){
@@ -171,12 +172,13 @@ class SmartParking {
       gateSensor.loop();
       counterSensor.loop();
       //actuator.loop();
-
+ 
       if(currentState != gateSensor.getCurrentState()){
         currentState = gateSensor.getCurrentState();
-        reportGateState();
+        // reportGateState();
         reportSensorBlocked();
       }
+      
       if(currentCarCount != counterSensor.getCarCounter()){
         currentCarCount = counterSensor.getCarCounter();
         reportCar();

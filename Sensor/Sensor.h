@@ -14,6 +14,10 @@ class Sensor {
     }
     ~Sensor(){}
 
+    int getLightValue(){
+      return this->lightValue;
+    }
+
     int getLapsus(){
       return this->lapsus;
     }
