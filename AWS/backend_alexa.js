@@ -1,7 +1,7 @@
 const Alexa = require('ask-sdk-core');
 const AWS = require('aws-sdk');
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
-const IotData = new AWS.IotData({ endpoint: 'tu-endpoint.com' });
+const IotData = new AWS.IotData({ endpoint: 'agm6c372inpl5-ats.iot.us-east-2.amazonaws.com' });
 
 async function getThingName(userId) {
   const params = {
@@ -113,10 +113,10 @@ const getThresholdHandler = {
             const params = await getShadowParams(userId);
             const shadowData = await getShadowPromise(params);
             const threshold = shadowData.state.reported.config.threshold;
-            speakOutput = `The current sensor threshold is ${lapsus}`;
+            speakOutput = `The current sensor threshold is ${threshold}`;
         }
         catch(error){
-            console.error('Error obtaining lapsus', error);
+            console.error('Error obtaining threshold', error);
         }
         return handlerInput.responseBuilder
             .speak(speakOutput)
